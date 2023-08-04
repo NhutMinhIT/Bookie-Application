@@ -1,17 +1,29 @@
+//COMMON
 import { Request, Response } from "express";
+// IMPORT DATA
 import { AppDataSource } from "../database/data-source";
+//ENTITIES
 import { Author } from "../entities/Author";
+
 import { ResponseUtl } from "../utils/Respone";
 import { Paginator } from "../database/Paginator";
 
+//DTO
+import { CreateAuthorDTO } from "../DTO/CreateAuthor";
+
+//Error
+import { validateOrReject, validate } from "class-validator";
+
 export class AuthorsController {
+  //get All Authors
   async getAuthors(req: Request, res: Response) {
     const builder = await AppDataSource.getRepository(Author).createQueryBuilder().orderBy("id", "DESC");
     const { records: authors, paginationInfo } = await Paginator.paginate(builder, req);
     return ResponseUtl.sendRespone(res, "Fetch author successfully", authors, paginationInfo);
   }
 
-  async getAuthorByID(req: Request, res: Response) {
+  //get author by ID
+  async getAuthorByID(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
 
     const author = await AppDataSource.getRepository(Author).findOneByOrFail({
@@ -19,5 +31,33 @@ export class AuthorsController {
     });
 
     return ResponseUtl.sendRespone<Author>(res, "Fetch author successfuly", author);
+  }
+
+  //Create Author
+  async createAuthor(req: Request, res: Response): Promise<Response> {
+    const authorData = req.body;
+
+    const repo = AppDataSource.getRepository(Author);
+
+    const dto = new CreateAuthorDTO();
+    Object.assign(dto, authorData);
+
+    const errors = await validate(dto);
+    if (errors.length > 0) {
+      return ResponseUtl.sendError(res, "Invalid Data", 422, errors);
+    }
+    // Check Email Duplicate
+    const exsitingAuthor = await repo.findOne({
+      where: { email: authorData.email },
+    });
+
+    if (exsitingAuthor) {
+      errors.push({ property: "email", constraints: { isUnique: "Email must be unique" } });
+      return ResponseUtl.sendError(res, "Email already exists", 422, errors);
+    }
+    const author = repo.create(authorData);
+    await repo.save(author);
+
+    return ResponseUtl.sendRespone(res, "Create Successfully new Author", author, 200);
   }
 }
