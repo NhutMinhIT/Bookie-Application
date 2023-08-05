@@ -8,6 +8,7 @@ lib-cov
 *.gz
 *.swp
 
+
 pids
 logs
 results
@@ -39,3 +40,4 @@ dist/**/*
 
 # ignore yarn.lock
 yarn.locks
+.env
