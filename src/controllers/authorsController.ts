@@ -35,29 +35,37 @@ export class AuthorsController {
 
   //Create Author
   async createAuthor(req: Request, res: Response): Promise<Response> {
-    const authorData = req.body;
+    try {
+      const authorData = req.body;
 
-    const repo = AppDataSource.getRepository(Author);
+      const repo = AppDataSource.getRepository(Author);
 
-    const dto = new CreateAuthorDTO();
-    Object.assign(dto, authorData);
+      const dto = new CreateAuthorDTO();
+      Object.assign(dto, authorData);
 
-    const errors = await validate(dto);
-    if (errors.length > 0) {
-      return ResponseUtl.sendError(res, "Invalid Data", 422, errors);
+      const errors = await validate(dto);
+      if (errors.length > 0) {
+        return ResponseUtl.sendError(res, "Invalid Data", 422, errors);
+      }
+
+      // Check Email Duplicate
+      const existingAuthor = await repo.findOne({
+        where: { email: authorData.email },
+      });
+      if (existingAuthor) {
+        errors.push({ property: "email", constraints: { isUnique: "Email must be unique" } });
+        return ResponseUtl.sendError(res, "Email already exists", 422, errors);
+      }
+
+      // Create and save the new author
+      const author = repo.create(authorData);
+      await repo.save(author);
+
+      return ResponseUtl.sendRespone(res, "Create Successfully new Author", author, 200);
+    } catch (error) {
+      // Handle any unexpected errors here
+      console.error("Error in createAuthor:", error);
+      return ResponseUtl.sendError(res, "An unexpected error occurred", 500, null);
     }
-    // Check Email Duplicate
-    const exsitingAuthor = await repo.findOne({
-      where: { email: authorData.email },
-    });
-
-    if (exsitingAuthor) {
-      errors.push({ property: "email", constraints: { isUnique: "Email must be unique" } });
-      return ResponseUtl.sendError(res, "Email already exists", 422, errors);
-    }
-    const author = repo.create(authorData);
-    await repo.save(author);
-
-    return ResponseUtl.sendRespone(res, "Create Successfully new Author", author, 200);
   }
 }
