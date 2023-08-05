@@ -9,8 +9,10 @@ const router = express.Router();
 
 router.get("/", ErrorHandler.handleError(authorsController.getAuthors));
 
+//get Authors By ID
 router.get("/author/:id", ErrorHandler.handleError(authorsController.getAuthorByID));
 
+//Create Authors
 router.post(
   "/create-author",
   FileUploader.upload("image", "author", 2 * 1024 * 1024),
