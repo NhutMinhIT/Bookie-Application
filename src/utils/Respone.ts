@@ -1,7 +1,7 @@
 import { Response } from "express";
 
 export class ResponseUtl {
-  static sendRespone<T>(
+  static sendResponse<T>(
     res: Response,
     message: string,
     data: T,
@@ -16,12 +16,7 @@ export class ResponseUtl {
     });
   }
 
-  static sendError<T>(
-    res: Response,
-    message: string,
-    statusCode = 500,
-    error: T
-  ): Response<T> {
+  static sendError<T>(res: Response, message: string, statusCode = 500, error: T): Response<T> {
     return res.status(statusCode).json({
       success: false,
       message,

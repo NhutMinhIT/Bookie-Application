@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MinLength, MaxLength, IsEmail, IsOptional } from "class-validator";
+import { IsNotEmpty, IsString, MinLength, MaxLength, IsEmail, IsOptional, IsAlpha } from "class-validator";
 
 export class CreateAuthorDTO {
   id?: Number;
@@ -6,7 +6,8 @@ export class CreateAuthorDTO {
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
-  @MaxLength(20)
+  @MaxLength(50)
+  @IsAlpha()
   name: String;
 
   @IsEmail()
